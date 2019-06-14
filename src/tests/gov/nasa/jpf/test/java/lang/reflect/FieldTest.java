@@ -22,7 +22,6 @@ import gov.nasa.jpf.util.test.TestJPF;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
 import org.junit.Test;
@@ -97,10 +96,6 @@ public class FieldTest extends TestJPF {
   public class Sub {
     public int f;
   }
-  
-  public static class ShortField {
-    short f;
-  }
 
   @Test
   public void getDeclaredAnnotationsTest () throws SecurityException, NoSuchFieldException{
@@ -109,20 +104,6 @@ public class FieldTest extends TestJPF {
       Field f2 = Super.class.getField("f");
       assertEquals(f1.getDeclaredAnnotations().length, 0);
       assertEquals(f2.getDeclaredAnnotations().length, 1);
-    }
-  }
-  
-  @Test
-  public void getSetShortFieldTest() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-    if(verifyNoPropertyViolation()) {
-      ShortField sf = new ShortField();
-      Field f = sf.getClass().getField("f");
-      f.set(sf, (short)3);
-      assertEquals((short)f.get(sf), (short)3);
-      
-      short[] x = new short[] {1,2,3};
-      Array.setShort(x, 0, (short) 3);
-      assertEquals(Array.getShort(x, 0), (short)3);
     }
   }
 }

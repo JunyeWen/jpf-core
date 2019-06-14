@@ -34,7 +34,7 @@ public class DDIV extends Instruction implements JVMInstruction {
 
     double v1 = frame.popDouble();
     double v2 = frame.popDouble();
-
+    
     double r = v2 / v1;
     
     frame.pushDouble(r);

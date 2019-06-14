@@ -496,6 +496,10 @@ public class JPF implements Runnable {
     throw new ExitException();
   }
 
+  public static void exitQuietly() {
+      throw new ExitException(false, null);
+  }
+  
   public boolean foundErrors() {
     return !(search.getErrors().isEmpty());
   }

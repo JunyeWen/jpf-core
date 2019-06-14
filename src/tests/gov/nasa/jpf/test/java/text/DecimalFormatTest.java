@@ -26,7 +26,6 @@ import java.text.DecimalFormatSymbols;
 import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
-import java.util.Locale;
 
 import org.junit.Test;
 
@@ -64,8 +63,6 @@ public class DecimalFormatTest extends TestJPF {
       NumberFormat format = NumberFormat.getIntegerInstance();
       assertTrue(format.isParseIntegerOnly());
       format = NumberFormat.getNumberInstance();
-      assertFalse(format.isParseIntegerOnly());
-      format = NumberFormat.getNumberInstance(Locale.ENGLISH);
       assertFalse(format.isParseIntegerOnly());
     }
   }

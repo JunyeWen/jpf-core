@@ -30,12 +30,6 @@ public class AnnotationProxyBase {
   @Override
   public native String toString();
   
-  @Override
-  public native boolean equals(Object o);
-  
-  @Override
-  public native int hashCode();
-  
   /***
   public String toString() {
     StringBuilder sb = new StringBuilder();

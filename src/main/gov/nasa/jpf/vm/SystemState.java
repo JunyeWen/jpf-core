@@ -762,7 +762,7 @@ public class SystemState {
     trail = new Transition(curCg, execThread);
     entryAtomicLevel = atomicLevel; // store before we start to enter
 
-    execThread.executeTransition(this);    
+    execThread.executeTransition(this);
   }
 
   /**

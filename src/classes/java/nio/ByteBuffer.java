@@ -19,13 +19,12 @@ package java.nio;
 
 public class ByteBuffer extends Buffer {
 	byte[] array;
-	int offset;
 
 	public static ByteBuffer allocate(int i) {
 		if (i < 0) {
 			throw new IllegalArgumentException();
 		}
-		ByteBuffer newBuffer = new ByteBuffer(-1, 0, i, i, new byte[i], 0);
+		ByteBuffer newBuffer = new ByteBuffer(i);
 		return newBuffer;
 	}
 
@@ -33,18 +32,14 @@ public class ByteBuffer extends Buffer {
 		return allocate(capacity);
 	}
 
-	ByteBuffer(int mark, int pos, int lim, int cap, byte[] hb, int offset) {
-		super(mark, pos, lim, cap);
-		this.array = hb;
-		this.offset = offset;
-	}
-
-	ByteBuffer(int mark, int pos, int lim, int cap) {
-		this(mark, pos, lim, cap, null, 0);
+	protected ByteBuffer(int i) {
+		capacity = i;
+		this.clear();
+		array = new byte[i];
 	}
 
 	public ByteBuffer duplicate() {
-		ByteBuffer copy = new ByteBuffer(-1, 0, capacity, capacity, new byte[capacity], 0);
+		ByteBuffer copy = new ByteBuffer(capacity);
 		copy.array = array;
 		return copy;
 	}
@@ -55,7 +50,7 @@ public class ByteBuffer extends Buffer {
 
 	public ByteBuffer slice() {
 		int remaining = limit - position;
-		ByteBuffer copy = new ByteBuffer(-1, 0, remaining, remaining, new byte[remaining], 0);
+		ByteBuffer copy = new ByteBuffer(remaining);
 		copy.array = array;
 		return copy;
 	}
@@ -285,7 +280,7 @@ public class ByteBuffer extends Buffer {
 	}
 
 	public static ByteBuffer wrap(byte[] outMess) {
-		ByteBuffer byteBuffer = new ByteBuffer(-1, 0, outMess.length, outMess.length, new byte[outMess.length], 0);
+		ByteBuffer byteBuffer = new ByteBuffer(outMess.length);
 		byteBuffer.clear();
 		System.arraycopy(outMess, 0 , byteBuffer.array, 0, outMess.length);
 		return byteBuffer;

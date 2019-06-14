@@ -18,42 +18,14 @@
 
 package gov.nasa.jpf.jvm;
 
-import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.util.Misc;
 import gov.nasa.jpf.util.StringSetMatcher;
-import gov.nasa.jpf.vm.AbstractTypeAnnotationInfo;
-import gov.nasa.jpf.vm.AnnotationInfo;
-import gov.nasa.jpf.vm.BootstrapMethodInfo;
-import gov.nasa.jpf.vm.BytecodeAnnotationInfo;
-import gov.nasa.jpf.vm.BytecodeTypeParameterAnnotationInfo;
-import gov.nasa.jpf.vm.ClassInfo;
-import gov.nasa.jpf.vm.ClassInfoException;
-import gov.nasa.jpf.vm.ClassLoaderInfo;
-import gov.nasa.jpf.vm.ClassParseException;
-import gov.nasa.jpf.vm.DirectCallStackFrame;
-import gov.nasa.jpf.vm.ExceptionHandler;
-import gov.nasa.jpf.vm.ExceptionParameterAnnotationInfo;
-import gov.nasa.jpf.vm.FieldInfo;
-import gov.nasa.jpf.vm.FormalParameterAnnotationInfo;
-import gov.nasa.jpf.vm.GenericSignatureHolder;
-import gov.nasa.jpf.vm.InfoObject;
-import gov.nasa.jpf.vm.LocalVarInfo;
-import gov.nasa.jpf.vm.MethodInfo;
-import gov.nasa.jpf.vm.NativeMethodInfo;
-import gov.nasa.jpf.vm.StackFrame;
-import gov.nasa.jpf.vm.SuperTypeAnnotationInfo;
-import gov.nasa.jpf.vm.ThreadInfo;
-import gov.nasa.jpf.vm.ThrowsAnnotationInfo;
-import gov.nasa.jpf.vm.TypeAnnotationInfo;
-import gov.nasa.jpf.vm.TypeParameterAnnotationInfo;
-import gov.nasa.jpf.vm.TypeParameterBoundAnnotationInfo;
-import gov.nasa.jpf.vm.Types;
-import gov.nasa.jpf.vm.VariableAnnotationInfo;
+import gov.nasa.jpf.vm.*;
+
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * a ClassInfo that was created from a Java classfile
@@ -416,12 +388,8 @@ public class JVMClassInfo extends ClassInfo {
     //--- annotations
     protected AnnotationInfo[] annotations;
     protected AnnotationInfo curAi;
-    protected LinkedList<AnnotationInfo> annotationStack;
-    protected LinkedList<Object[]> valuesStack;
     protected AnnotationInfo[][] parameterAnnotations;
     protected Object[] values;
-    // true if we need to filter null annotations
-    private boolean compactAnnotationArray = false;
 
     //--- declaration annotations
     
@@ -433,57 +401,16 @@ public class JVMClassInfo extends ClassInfo {
     @Override
     public void setAnnotation (ClassFile cf, Object tag, int annotationIndex, String annotationType) {
       if (tag instanceof InfoObject) {
-        if(annotationIndex == -1) {
-          if(annotationStack == null) {
-            assert valuesStack == null;
-            valuesStack = new LinkedList<>();
-            annotationStack = new LinkedList<>();
-          }
-          annotationStack.addFirst(curAi);
-          valuesStack.addFirst(values);
-        }
-        try { 
-          curAi = getResolvedAnnotationInfo(Types.getClassNameFromTypeName(annotationType));
-          if(annotationIndex != -1) {
-            annotations[annotationIndex] = curAi;
-          }
-        } catch(ClassInfoException cie) {
-          // if we can't parse a field, we're sunk, throw and tank the reflective call
-          if(annotationIndex == -1) {
-            throw cie;
-          }
-          compactAnnotationArray = true;
-          annotations[annotationIndex] = null;
-          // skip this annotation
-          throw new SkipAnnotation();
-        }
+        curAi = getResolvedAnnotationInfo(Types.getClassNameFromTypeName(annotationType));
+        annotations[annotationIndex] = curAi;
       }
     }
     
     @Override
     public void setAnnotationsDone (ClassFile cf, Object tag) {
       if (tag instanceof InfoObject) {
-        AnnotationInfo[] toSet;
-        if(compactAnnotationArray) {
-          int nAnnot = 0;
-          for(AnnotationInfo ai : annotations) {
-            if(ai != null) {
-              nAnnot++;
-            }
-          }
-          toSet = new AnnotationInfo[nAnnot];
-          int idx = 0;
-          for(AnnotationInfo ai : annotations) {
-            if(ai != null) {
-              toSet[idx++] = ai;
-            }
-          }
-        } else {
-          toSet = annotations;
-        }
-        ((InfoObject) tag).addAnnotations(toSet);
+        ((InfoObject) tag).addAnnotations(annotations);
       }
-      compactAnnotationArray = false;
     }
 
     @Override
@@ -499,14 +426,8 @@ public class JVMClassInfo extends ClassInfo {
 
     @Override
     public void setParameterAnnotation (ClassFile cf, Object tag, int annotationIndex, String annotationType) {
-      try {
-        curAi = getResolvedAnnotationInfo(Types.getClassNameFromTypeName(annotationType));
-        annotations[annotationIndex] = curAi;
-      } catch(ClassInfoException cie) {
-        compactAnnotationArray = true;
-        annotations[annotationIndex] = null;
-        throw new SkipAnnotation();
-      }
+      curAi = getResolvedAnnotationInfo(Types.getClassNameFromTypeName(annotationType));
+      annotations[annotationIndex] = curAi;
     }
 
     @Override
@@ -612,9 +533,7 @@ public class JVMClassInfo extends ClassInfo {
     public void setAnnotationValueCount (ClassFile cf, Object tag, int annotationIndex, int nValuePairs) {
       // if we have values, we need to clone the defined annotation so that we can overwrite entries
       curAi = curAi.cloneForOverriddenValues();
-      if(annotationIndex != -1) {
-        annotations[annotationIndex] = curAi;
-      }
+      annotations[annotationIndex] = curAi;
     }
     
     @Override
@@ -624,19 +543,6 @@ public class JVMClassInfo extends ClassInfo {
         values[arrayIndex] = val;
       } else {
         curAi.setClonedEntryValue(elementName, val);
-      }
-    }
-    
-    @Override
-    public void setAnnotationFieldValue(ClassFile cf, Object tag, int annotationIndex, int valueIndex, String elementName, int arrayIndex) {
-      assert annotationStack.size() > 0;
-      AnnotationInfo ai = curAi;
-      values = valuesStack.pop();
-      curAi = annotationStack.pop();
-      if(arrayIndex >= 0) {
-        values[arrayIndex] = ai;
-      } else {
-        curAi.setClonedEntryValue(elementName, ai);
       }
     }
 

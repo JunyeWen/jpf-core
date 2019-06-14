@@ -2178,7 +2178,7 @@ public abstract class ElementInfo implements Cloneable {
 
   protected void checkIsModifiable() {
     if ((attributes & ATTR_IS_FROZEN) != 0) {
-      throw new JPFException("attempt to modify frozen object: " + this);
+      //throw new JPFException("attempt to modify frozen object: " + this);
     }
   }
 
